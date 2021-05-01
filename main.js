@@ -30,13 +30,26 @@
 
   /* UI functions  */
 
-  const appendToDisplay = (val) => {};
+  const appendToDisplay = (val) => {
+    displayEl.textContent += val;
+  };
 
-  const replaceDisplay = (val) => {};
+  const replaceDisplay = (val) => {
+    displayEl.textContent = val;
+  };
 
   /* Control flow  */
 
   calcEl.addEventListener("click", (e) => {
     console.log(e.target);
+    if (e.target.classList.contains("digit")) {
+      // If a digit button was pressed and the screen is empty, replace display contents
+      if (displayEl.textContent == "") {
+        replaceDisplay(e.target.dataset.val);
+        // otherwise, append to what is already on display
+      } else if (displayEl.textContent != "") {
+        appendToDisplay(e.target.dataset.val);
+      }
+    }
   });
 })();
