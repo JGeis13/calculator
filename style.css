@@ -5,9 +5,12 @@
 }
 
 #calc-container {
-  background: rgb(169, 169, 169);
+  background: rgb(92, 92, 92);
   width: 415px;
   margin: 40px auto 0;
+  padding: 1rem;
+  border-radius: 5px;
+  box-shadow: 2px 4px 2px 2px rgb(157, 157, 157);
 }
 
 .display {
@@ -18,22 +21,32 @@
   font-size: 2rem;
   font-family: monospace;
   padding: 5px 10px;
+  background: rgb(124, 152, 128);
+  margin-bottom: 1rem;
+  box-shadow: inset 3px 3px 5px rgb(118, 136, 110);
 }
 
 .buttons-box {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   /* grid-template-rows: repeat(4, 1fr); */
-  gap: 1px;
+  gap: 20px;
   align-items: center;
   justify-content: center;
 }
 
 .btn {
-  background-color: aliceblue;
+  background-color: rgb(160, 160, 160);
   padding: 1rem;
   text-align: center;
   cursor: pointer;
+  border-radius: 5px;
+  box-shadow: 2px 2px 2px 2px rgb(50, 50, 50);
+}
+
+.btn.pressed {
+  box-shadow: none;
+  transform: translate(3px, 3px);
 }
 
 .btn.special:first-child {

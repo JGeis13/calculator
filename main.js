@@ -74,11 +74,22 @@
     return +displayEl.textContent;
   };
 
+  const displayFlash = () => {
+    displayEl.style.fontSize = "0px";
+    setTimeout(() => {
+      displayEl.style.fontSize = "2rem";
+    }, 50);
+  };
+
   /* Control flow  */
 
-  calcEl.addEventListener("click", (e) => {
-    console.log(e.target);
+  calcEl.addEventListener("mousedown", (e) => {
+    // animate button press by adding class on mousedown
+    if (e.target.classList.contains("btn")) {
+      e.target.classList.add("pressed");
+    }
 
+    // Handle .digit button presses
     if (e.target.classList.contains("digit")) {
       // If decimal btn
       if (state == "equals") return;
@@ -101,9 +112,8 @@
       }
       state = "value";
     } else if (e.target.classList.contains("operator")) {
-      // "flash" number so something happens
-
       // if already in operator state, treat as equals
+      displayFlash();
       if (operator != null) {
         replaceDisplay(operate(operator, memory, getDisplayValue()));
       }
@@ -124,5 +134,9 @@
       operator = null;
       state = "equals";
     }
+  });
+
+  document.addEventListener("mouseup", (e) => {
+    calcEl.querySelectorAll(".btn").forEach((btn) => btn.classList.remove("pressed"));
   });
 })();
