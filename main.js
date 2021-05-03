@@ -1,19 +1,10 @@
-// add
-// subtract
-// multiply
-// divide
-
-// operate
-//  - takes an operator and 2 numbers and then calls one of the above functions on the numbers
-
 (() => {
   /* Constants */
   const calcEl = document.querySelector("#calc-container");
   const displayEl = document.querySelector(".display");
 
   /* State */
-  let state = null; // null, operator, value, equals
-  let memory = null;
+  let memory = [null, null];
   let operator = null;
 
   /* Logical functions */
@@ -51,7 +42,16 @@
       default:
         console.log("should not reach this");
     }
-    return +val.toFixed(8);
+    return +val.toFixed(8); // round to 8 decimal places
+  };
+
+  const getActiveMemorySlot = () => {
+    if (!operator) return 0;
+    else return 1;
+  };
+
+  const updateMemory = (val) => {
+    memory[getActiveMemorySlot()] = val;
   };
 
   /* UI functions  */
@@ -66,8 +66,6 @@
 
   const clearDisplay = () => {
     displayEl.textContent = "0";
-    memory = null;
-    state = null;
   };
 
   const getDisplayValue = () => {
@@ -84,56 +82,95 @@
   /* Control flow  */
 
   calcEl.addEventListener("mousedown", (e) => {
-    // animate button press by adding class on mousedown
-    if (e.target.classList.contains("btn")) {
-      e.target.classList.add("pressed");
-    }
+    // if not a button, don't do anything
+    if (!e.target.classList.contains("btn")) return;
 
-    // Handle .digit button presses
+    // animate button press by adding class
+    e.target.classList.add("pressed");
+
+    const val = e.target.dataset.val;
+
     if (e.target.classList.contains("digit")) {
-      // If decimal btn
-      if (state == "equals") return;
-      if (e.target.dataset.val == ".") {
-        // if already a decimal or a 0, disallow
-        if (getDisplayValue() % 1 == 0) {
-          appendToDisplay(e.target.dataset.val);
-        } else if (state == "operator") {
-          replaceDisplay("0.");
-        }
-      } else if (state == null || state == "operator") {
-        replaceDisplay(e.target.dataset.val);
-        // otherwise, append to what is already on display
-      } else if (state == "value") {
-        if (getDisplayValue == 0) {
-          appendToDisplay("." + e.target.dataset.val);
-        } else {
-          appendToDisplay(e.target.dataset.val);
-        }
+      // PRESSED A DIGIT BUTTON
+      if (memory[getActiveMemorySlot()] == null) {
+        // if mem1 is empty, replace display val and update mem1
+        replaceDisplay(val);
+      } else {
+        // active memory is not empty - update display value by appending unless 0 is in memory
+        appendToDisplay(val);
       }
-      state = "value";
+      updateMemory(getDisplayValue());
+    } else if (e.target.classList.contains("decimal")) {
+      // PRESSED DECIMAL BUTTON
+      // if at the start of value, add a 0 before
+      if (memory[getActiveMemorySlot()] == null) {
+        appendToDisplay(val);
+        updateMemory(0);
+      } else {
+        // already something in memory
+        if (memory[getActiveMemorySlot()] % 1 != 0) {
+          // if already a decimal do nothing
+          return;
+        }
+        // otherwise, append
+        appendToDisplay(val);
+      }
     } else if (e.target.classList.contains("operator")) {
-      // if already in operator state, treat as equals
+      // PRESSED AN OPERATOR BUTTON
+
+      // flash screen
       displayFlash();
-      if (operator != null) {
-        replaceDisplay(operate(operator, memory, getDisplayValue()));
+
+      // if already have an operator and second value, complete operation and shift values
+      if (operator && memory[1]) {
+        memory[0] = operate(operator, memory[0], memory[1]);
+        memory[1] = null;
+        replaceDisplay(memory[0]);
       }
-      memory = getDisplayValue();
+
+      // store operator
       operator = e.target.dataset.val;
-      state = "operator";
     } else if (e.target.classList.contains("special")) {
-      let val = e.target.dataset.val;
+      // PRESSED A SPECIAL BUTTON
+
       if (val == "ac") {
-        // all clear
+        // pressed AC button
+
+        memory = [null, null];
+        operator = null;
         clearDisplay();
       } else if (val == "del") {
-        // delete
+        // pressed DEL button
+
+        if (!memory[getActiveMemorySlot()]) return;
+
+        replaceDisplay(
+          getDisplayValue()
+            .toString()
+            .slice(0, getDisplayValue().toString().length - 1)
+        );
+
+        if (displayEl.textContent == "") {
+          replaceDisplay(0);
+        }
+        updateMemory(getDisplayValue());
       }
     } else if (e.target.classList.contains("equals")) {
-      if (operator == null) return;
-      replaceDisplay(operate(operator, memory, getDisplayValue()));
+      // PRESSED EQUALS BUTTON
+
+      // do nothing if no operator or second value stored
+      if (operator == null || memory[1] == null) return;
+
+      // set mem1 to returned operation value
+      memory[0] = operate(operator, memory[0], memory[1]);
+      // clear mem2
+      memory[1] = null;
+      // clear stored operator
       operator = null;
-      state = "equals";
+      // display operation value on screen
+      replaceDisplay(memory[0]);
     }
+    console.log(memory);
   });
 
   document.addEventListener("mouseup", (e) => {
