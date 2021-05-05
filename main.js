@@ -33,7 +33,7 @@
       case "-":
         val = subtract(x, y);
         break;
-      case "x":
+      case "*":
         val = multiply(x, y);
         break;
       case "/":
@@ -128,20 +128,20 @@
       memory[0] = operate(operator, memory[0], memory[1]);
       memory[1] = null;
       replaceDisplay(memory[0]);
-    }
+    } else if (memory[0] == null) return;
 
     // store operator
     operator = val;
   };
 
   const handleSpecialPress = (val) => {
-    if (val == "ac") {
+    if (val == "ac" || val == "Escape") {
       // pressed AC button
 
       memory = [null, null];
       operator = null;
       clearDisplay();
-    } else if (val == "del") {
+    } else if (val == "del" || val == "Backspace") {
       // pressed DEL button
 
       if (!memory[getActiveMemorySlot()]) return;
@@ -202,8 +202,15 @@
   });
 
   /* Handle Keyboard Presses */
-  document.addEventListener("keypress", (e) => {
-    console.log(e.key);
+  document.addEventListener("keydown", (e) => {
+    const k = e.key;
+    console.log(k);
+    if (k == "=") handleEqualsPress();
+    else if (/[\+\-\/\*]/.test(k)) handleOperatorPress(k);
+    else if (k == ".") handleDecimalPress();
+    else if (/[0-9]/.test(k)) handleDigitPress(k);
+    else if (k == "Backspace" || k == "Escape") handleSpecialPress(k);
+    console.log(memory, operator);
   });
 
   document.addEventListener("mouseup", (e) => {
