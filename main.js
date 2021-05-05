@@ -79,7 +79,99 @@
     }, 50);
   };
 
-  /* Control flow  */
+  /* Control flow functions */
+
+  const handleDigitPress = (val) => {
+    if (operator == "equals") {
+      // if just got operation value, reset when pressing new digit
+      operator = null;
+      replaceDisplay(val);
+    } else if (memory[getActiveMemorySlot()] == null) {
+      // if mem slot is empty or 0, replace display val and update mem
+      replaceDisplay(val);
+    } else {
+      // active memory is not empty - update display value by appending unless 0 is in memory
+      appendToDisplay(val);
+    }
+    updateMemory(getDisplayValue());
+  };
+
+  const handleDecimalPress = () => {
+    // no double decimals
+    if (displayEl.textContent.includes(".")) return;
+    if (operator == "equals") {
+      // if just got operation value, reset when pressing new digit
+      operator = null;
+      replaceDisplay("0.");
+      updateMemory(getDisplayValue());
+    } else if (memory[getActiveMemorySlot()] == null) {
+      // if at the start of value, add a 0 before
+      appendToDisplay(".");
+      updateMemory(0);
+    } else {
+      // already something in memory
+      if (memory[getActiveMemorySlot()] % 1 != 0) {
+        // if already a decimal do nothing
+        return;
+      }
+      // otherwise, append
+      appendToDisplay(".");
+    }
+  };
+
+  const handleOperatorPress = (val) => {
+    // flash screen
+    displayFlash();
+
+    // if already have an operator and second value, complete operation and shift values
+    if (operator && memory[1]) {
+      memory[0] = operate(operator, memory[0], memory[1]);
+      memory[1] = null;
+      replaceDisplay(memory[0]);
+    }
+
+    // store operator
+    operator = val;
+  };
+
+  const handleSpecialPress = (val) => {
+    if (val == "ac") {
+      // pressed AC button
+
+      memory = [null, null];
+      operator = null;
+      clearDisplay();
+    } else if (val == "del") {
+      // pressed DEL button
+
+      if (!memory[getActiveMemorySlot()]) return;
+
+      replaceDisplay(
+        getDisplayValue()
+          .toString()
+          .slice(0, getDisplayValue().toString().length - 1)
+      );
+
+      if (displayEl.textContent == "") {
+        replaceDisplay(0);
+      }
+      updateMemory(getDisplayValue());
+    }
+  };
+
+  const handleEqualsPress = () => {
+    // do nothing if no operator or second value stored
+    if (operator == null || memory[1] == null) return;
+
+    // set mem1 to returned operation value
+    memory[0] = operate(operator, memory[0], memory[1]);
+    // clear mem2
+    memory[1] = null;
+    // clear stored operator
+    operator = "equals";
+    // display operation value on screen
+    replaceDisplay(memory[0]);
+  };
 
   calcEl.addEventListener("mousedown", (e) => {
     // if not a button, don't do anything
@@ -92,88 +184,32 @@
 
     if (e.target.classList.contains("digit")) {
       // PRESSED A DIGIT BUTTON
-      if (memory[getActiveMemorySlot()] == null) {
-        // if mem1 is empty, replace display val and update mem1
-        replaceDisplay(val);
-      } else {
-        // active memory is not empty - update display value by appending unless 0 is in memory
-        appendToDisplay(val);
-      }
-      updateMemory(getDisplayValue());
+      handleDigitPress(val);
     } else if (e.target.classList.contains("decimal")) {
       // PRESSED DECIMAL BUTTON
-      // if at the start of value, add a 0 before
-      if (memory[getActiveMemorySlot()] == null) {
-        appendToDisplay(val);
-        updateMemory(0);
-      } else {
-        // already something in memory
-        if (memory[getActiveMemorySlot()] % 1 != 0) {
-          // if already a decimal do nothing
-          return;
-        }
-        // otherwise, append
-        appendToDisplay(val);
-      }
+      handleDecimalPress();
     } else if (e.target.classList.contains("operator")) {
       // PRESSED AN OPERATOR BUTTON
-
-      // flash screen
-      displayFlash();
-
-      // if already have an operator and second value, complete operation and shift values
-      if (operator && memory[1]) {
-        memory[0] = operate(operator, memory[0], memory[1]);
-        memory[1] = null;
-        replaceDisplay(memory[0]);
-      }
-
-      // store operator
-      operator = e.target.dataset.val;
+      handleOperatorPress(val);
     } else if (e.target.classList.contains("special")) {
       // PRESSED A SPECIAL BUTTON
-
-      if (val == "ac") {
-        // pressed AC button
-
-        memory = [null, null];
-        operator = null;
-        clearDisplay();
-      } else if (val == "del") {
-        // pressed DEL button
-
-        if (!memory[getActiveMemorySlot()]) return;
-
-        replaceDisplay(
-          getDisplayValue()
-            .toString()
-            .slice(0, getDisplayValue().toString().length - 1)
-        );
-
-        if (displayEl.textContent == "") {
-          replaceDisplay(0);
-        }
-        updateMemory(getDisplayValue());
-      }
+      handleSpecialPress(val);
     } else if (e.target.classList.contains("equals")) {
       // PRESSED EQUALS BUTTON
-
-      // do nothing if no operator or second value stored
-      if (operator == null || memory[1] == null) return;
-
-      // set mem1 to returned operation value
-      memory[0] = operate(operator, memory[0], memory[1]);
-      // clear mem2
-      memory[1] = null;
-      // clear stored operator
-      operator = null;
-      // display operation value on screen
-      replaceDisplay(memory[0]);
+      handleEqualsPress();
     }
-    console.log(memory);
+    // console.log(memory);
+  });
+
+  /* Handle Keyboard Presses */
+  document.addEventListener("keypress", (e) => {
+    console.log(e.key);
   });
 
   document.addEventListener("mouseup", (e) => {
     calcEl.querySelectorAll(".btn").forEach((btn) => btn.classList.remove("pressed"));
   });
 })();
+
+/* Map to keys */
+/* show which key was just hit and then fade away */
